@@ -6,6 +6,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ public class NoKebab implements ModInitializer {
 	static public final Identifier MISSINGNO_ID = new Identifier("nokebab", "missingno");
 	static public final RegistryKey<PaintingVariant> MISSINGNO_KEY = RegistryKey.of(RegistryKeys.PAINTING_VARIANT, MISSINGNO_ID);
 	static public final PaintingVariant MISSINGNO = Registry.register(Registries.PAINTING_VARIANT, MISSINGNO_KEY, new PaintingVariant(16, 16));
+	static public final RegistryEntry<PaintingVariant> MISSINGNO_ENTRY = Registries.PAINTING_VARIANT.getEntry(MISSINGNO);
+
 
 	@Override
 	public void onInitialize() {

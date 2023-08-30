@@ -13,7 +13,6 @@ import net.minecraft.client.render.entity.PaintingEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import tk.estecka.nokebab.IPaintingEntityDuck;
-import tk.estecka.nokebab.NoKebab;
 
 /**
  * Euler to quaternions: https://computergraphics.stackexchange.com/a/8229
@@ -32,7 +31,7 @@ extends EntityRenderer<PaintingEntity>
 	@Inject( method="render", at=@At("TAIL") )
 	void	renderMissingnoLabel(PaintingEntity painting, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo info)
 	{
-		if (painting.getVariant() == NoKebab.MISSINGNO_ENTRY) {
+		if (!IPaintingEntityDuck.Of(painting).GetRawVariant().isEmpty()) {
 			final TextRenderer renderer = this.getTextRenderer();
 			String variantId = IPaintingEntityDuck.Of(painting).GetRawVariant();
 			float x = -renderer.getWidth(variantId)/2;

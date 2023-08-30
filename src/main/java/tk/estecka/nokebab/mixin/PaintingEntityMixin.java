@@ -1,17 +1,18 @@
 package tk.estecka.nokebab.mixin;
 
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.entity.decoration.painting.PaintingVariant;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
+import tk.estecka.nokebab.IPaintingEntityDuck;
 import tk.estecka.nokebab.NoKebab;
-import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -19,62 +20,67 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PaintingEntity.class)
 public abstract class PaintingEntityMixin 
+implements IPaintingEntityDuck
 {
-	@Shadow
-	static private final RegistryKey<PaintingVariant> DEFAULT_VARIANT = NoKebab.MISSINGNO_KEY;
+	static private final Identifier	DEFAULT_ID = Registries.PAINTING_VARIANT.getDefaultId();
+	static private final TrackedData<String> RAW_VARIANT = DataTracker.registerData(PaintingEntity.class, TrackedDataHandlerRegistry.STRING);
 
 	public final PaintingEntity	painting = (PaintingEntity)(Object)this;
-	private String	lastKnownVariant = null;
+
+	@Inject( method="initDataTracker", at=@At("HEAD") )
+	void	initRawVariant(CallbackInfo info){
+		// Called from the constructor for `Entity`; `this.painting` is yet uninitialized.
+		((PaintingEntity)(Object)this).getDataTracker().startTracking(RAW_VARIANT, "");
+	}
+
+	@NotNull
+	public String	GetRawVariant(){
+		return painting.getDataTracker().get(RAW_VARIANT);
+	}
+
+	private void	SetRawVariant(@NotNull String value){
+		painting.getDataTracker().set(RAW_VARIANT, value);
+	}
 
 	@Inject( method="setVariant", at=@At("HEAD") )
-	void	trackKnownVariant(RegistryEntry<PaintingVariant> entry, CallbackInfo info){
-		var key = entry.getKey();
-		if (key.isEmpty())
-			NoKebab.LOGGER.error("Invalid change to the active variant: of \"{}\"(ID kept) {} {}", this.lastKnownVariant, painting.getPos(), painting.getUuid());
-		else if (!key.get().equals(NoKebab.MISSINGNO_KEY))
-			this.lastKnownVariant = key.get().getValue().toString();
+	void	DiscardMissingno(RegistryEntry<PaintingVariant> entry, CallbackInfo info){
+		final String rawVariant = this.GetRawVariant();
+		if (!rawVariant.isEmpty()){
+			NoKebab.LOGGER.warn("Missingno painting had its variant changed from \"{}\" to {}", rawVariant, entry.getKey());
+			this.SetRawVariant("");
+		}
 	}
 
 	@Redirect( method="writeCustomDataToNbt", at=@At(value="INVOKE", target="net/minecraft/entity/decoration/painting/PaintingEntity.writeVariantToNbt (Lnet/minecraft/nbt/NbtCompound;Lnet/minecraft/registry/entry/RegistryEntry;)V") )
-	private void	WriteMissingVariantToNBT(NbtCompound nbt, RegistryEntry<PaintingVariant> variant) {
-		boolean isMissingno = variant.matchesKey(NoKebab.MISSINGNO_KEY);
+	private void	WriteMissingVariantToNBT(NbtCompound nbt, RegistryEntry<PaintingVariant> entry) {
+		final String rawVariant = this.GetRawVariant();
 
-		if (lastKnownVariant == null)
-		{
-			NoKebab.LOGGER.error("Painting has no last-known variant: {} {}", painting.getPos(), painting.getUuid());
-			if (isMissingno || variant.getKey().isEmpty())
-				NoKebab.LOGGER.error("Painting also has no valid active variant.");
-			PaintingEntity.writeVariantToNbt(nbt, variant);
+		if (rawVariant.isEmpty())
+			PaintingEntity.writeVariantToNbt(nbt, entry);
+		else {
+			nbt.putString(PaintingEntity.VARIANT_NBT_KEY, rawVariant);
+			if (!entry.matchesId(DEFAULT_ID)){
+				NoKebab.LOGGER.error("Painting is Missingno, but active variant is not the default one: {} {} ", painting.getPos(), painting.getUuid());
+				NoKebab.LOGGER.error("Known: \"{}\" Active: {}", rawVariant, entry.getKey());
+			}
 		}
-		else if (!isMissingno && !variant.matchesId(new Identifier(lastKnownVariant)))
-		{
-			NoKebab.LOGGER.error("Mismatch between last-known variant and active variant: {} {}", painting.getPos(), painting.getUuid());
-			NoKebab.LOGGER.error("Known: \"{}\" Active: {}", lastKnownVariant, variant.getKey());
-			PaintingEntity.writeVariantToNbt(nbt, variant);
-		}
-		else
-			nbt.putString(PaintingEntity.VARIANT_NBT_KEY, lastKnownVariant);
 	}
 
-	@Redirect( method="readCustomDataFromNbt", at=@At(value="INVOKE", target="net/minecraft/entity/decoration/painting/PaintingEntity.readVariantFromNbt (Lnet/minecraft/nbt/NbtCompound;)Ljava/util/Optional;") )
-	private Optional<? extends RegistryEntry<PaintingVariant>>	preserveMissingVariantFromNBT(NbtCompound nbt){
+	@Inject( method="readCustomDataFromNbt", at=@At("TAIL") )
+	private void	preserveMissingVariantFromNBT(NbtCompound nbt, CallbackInfo info){
 		String nbtString = nbt.getString(PaintingEntity.VARIANT_NBT_KEY);
-		Identifier nbtId = Identifier.tryParse(nbtString);
-
 		if (nbtString.isEmpty())
-			return Optional.empty();
+			return;
 
-		this.lastKnownVariant = nbtString;
-		if (nbtId == null) {
-			NoKebab.LOGGER.warn("Painting with malformed painting ID: \"{}\" {} {}", nbtString, painting.getPos(), painting.getUuid());
-			return Optional.empty();
-		}
-		else {
-			var entry = Registries.PAINTING_VARIANT.getEntry(RegistryKey.of(RegistryKeys.PAINTING_VARIANT, nbtId));
-			if (entry.isEmpty())
-				NoKebab.LOGGER.warn("Painting with missing ID: \"{}\" {} {}", nbtString, painting.getPos(), painting.getUuid());
-			return entry;
-		}
+		Identifier nbtId = Identifier.tryParse(nbtString);
+		boolean valid  = nbtId!=null;
+		boolean exists = valid && Registries.PAINTING_VARIANT.containsId(nbtId);
+		if (!valid)
+			NoKebab.LOGGER.warn("Painting with malformed ID: \"{}\" {} {}", nbtString, painting.getPos(), painting.getUuid());
+		else if (!exists)
+			NoKebab.LOGGER.warn("Painting with missing ID: \"{}\" {} {}", nbtString, painting.getPos(), painting.getUuid());
 
+		if (!valid || !exists)
+			this.SetRawVariant(nbtString);
 	}
 }

@@ -3,6 +3,7 @@
 	"package": "tk.estecka.nokebab.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
+		"ISpriteAtlasHolderMixin",
 		"PaintingEntityMixin",
 		"PaintingEntityRendererMixin"
 	],

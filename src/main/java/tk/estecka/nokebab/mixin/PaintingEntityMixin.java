@@ -33,7 +33,7 @@ implements IPaintingEntityDuck
 		((PaintingEntity)(Object)this).getDataTracker().startTracking(RAW_VARIANT, "");
 	}
 
-	@NotNull 
+	@NotNull
 	public String	GetRawVariant(){
 		return painting.getDataTracker().get(RAW_VARIANT);
 	}

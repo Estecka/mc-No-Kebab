@@ -9,13 +9,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.font.TextRenderer.TextLayerType;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.PaintingEntityRenderer;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import tk.estecka.nokebab.IPaintingEntityDuck;
 
@@ -61,9 +61,7 @@ public abstract class PaintingEntityRendererMixin
 			matrices.scale(-0.025f, -0.025f, -0.025f);
 			matrices.multiply(entityRotation);
 			matrices.translate(0, -4, 2.5f);
-			textRenderer.draw(variantId, x, y, 0xff000000, false, matrices.peek().getPositionMatrix(), vertex, TextLayerType.NORMAL, 0x0, light);
-			matrices.translate(0, 0, 0.5f);
-			textRenderer.draw(variantId, x, y, 0xffff88ff, true, matrices.peek().getPositionMatrix(), vertex, TextLayerType.NORMAL, 0x0, light);
+			textRenderer.drawWithOutline(Text.literal(variantId).asOrderedText(), x, y, 0xffff88ff, 0xff000000, matrices.peek().getPositionMatrix(), vertex, light);
 			matrices.pop();
 		}
 	}

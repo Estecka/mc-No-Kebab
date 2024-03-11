@@ -20,11 +20,9 @@
 		"no-kebab.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.14.22",
 		"minecraft": "~1.19.4",
+		"fabricloader": ">=0.15.7",
 		"java": ">=17",
 		"fabric-api": "*"
-	},
-	"suggests": {
 	}
 }

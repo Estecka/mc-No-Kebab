@@ -1,5 +1,6 @@
 package tk.estecka.nokebab;
 
+import org.jetbrains.annotations.NotNull;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 
 public interface IPaintingEntityDuck 
@@ -8,5 +9,6 @@ public interface IPaintingEntityDuck
 		return (IPaintingEntityDuck)painting;
 	}
 
-	public String	nokebab$GetRawVariant();
+	public @NotNull String nokebab$GetRawVariant();
+	public void nokebab$SetRawVariant(@NotNull String id);
 }

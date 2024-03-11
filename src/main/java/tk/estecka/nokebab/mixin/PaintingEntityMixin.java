@@ -14,7 +14,6 @@ import tk.estecka.nokebab.IPaintingEntityDuck;
 import tk.estecka.nokebab.NoKebab;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -39,8 +38,7 @@ implements IPaintingEntityDuck
 		return this.getDataTracker().get(RAW_VARIANT);
 	}
 
-	@Unique
-	private void	SetRawVariant(@NotNull String value){
+	public void	nokebab$SetRawVariant(@NotNull String value){
 		this.getDataTracker().set(RAW_VARIANT, value);
 	}
 
@@ -49,7 +47,7 @@ implements IPaintingEntityDuck
 		final String rawVariant = this.nokebab$GetRawVariant();
 		if (!rawVariant.isEmpty()){
 			NoKebab.LOGGER.warn("Missingno painting had its variant changed from \"{}\" to {}", rawVariant, entry.getKey());
-			this.SetRawVariant("");
+			this.nokebab$SetRawVariant("");
 		}
 	}
 
@@ -83,6 +81,6 @@ implements IPaintingEntityDuck
 			NoKebab.LOGGER.warn("Painting with missing ID: \"{}\" {} {}", nbtString, this.getPos(), this.getUuid());
 
 		if (!valid || !exists)
-			this.SetRawVariant(nbtString);
+			this.nokebab$SetRawVariant(nbtString);
 	}
 }

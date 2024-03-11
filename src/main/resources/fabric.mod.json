@@ -15,6 +15,9 @@
 	"icon": "assets/nokebab/icon.png",
 	"environment": "*",
 	"entrypoints": {
+		"main":[
+			"tk.estecka.nokebab.NoKebab"
+		]
 	},
 	"mixins": [
 		"no-kebab.mixins.json"

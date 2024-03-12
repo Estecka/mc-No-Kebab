@@ -26,6 +26,7 @@ public class Commands
 	static private final String SRC_ARG = "source";
 	static private final String DST_ARG = "destination";
 
+	static private final String SUCCESS_MSG_LIT = "command.nokebab.migrate.success.literal";
 	static private final String SUCCESS_MSG = "command.nokebab.migrate.success";
 	static private final String FAILURE_MSG = "command.nokebab.migrate.failure";
 
@@ -63,14 +64,12 @@ public class Commands
 	}
 
 	static private int MigrateLiteral(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		int r = Migration.Literal(
-			getString(context, SRC_ARG),
-			getString(context, DST_ARG),
-			context.getSource().getWorld()
-		);
+		String src = getString(context, SRC_ARG);
+		String dst = getString(context, DST_ARG);
 
+		int r = Migration.Literal(src, dst, context.getSource().getWorld());
 		if (r > 0){
-			context.getSource().sendFeedback(ServersideTranslatable(SUCCESS_MSG, r), true);
+			context.getSource().sendFeedback(ServersideTranslatable(SUCCESS_MSG_LIT, r, src, dst), true);
 			return 1;
 		}
 		else{

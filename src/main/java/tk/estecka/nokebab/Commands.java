@@ -1,17 +1,24 @@
 package tk.estecka.nokebab;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.entity.decoration.painting.PaintingEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
 import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
@@ -30,22 +37,25 @@ public class Commands
 	static private final String SUCCESS_MSG = "command.nokebab.migrate.success";
 	static private final String FAILURE_MSG = "command.nokebab.migrate.failure";
 
-	static public void	Register(){
-		CommandRegistrationCallback.EVENT.register(Commands::RegisterWith);
-	}
-
 	static private MutableText ServersideTranslatable(String key, Object ... args){
 		return Text.translatableWithFallback(key, I18n.translate(key, args), args);
 	}
 
-	static public void RegisterWith(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment env){
+
+	static public void	Register(){
+		CommandRegistrationCallback.EVENT.register(Commands::RegisterWith);
+	}
+
+	static private void RegisterWith(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment env){
 		final var root = literal("nokebab").requires(s->s.hasPermissionLevel(3));
 
 		final var migrate = literal("migrate");
 
 		migrate.then(literal("literal")
 			.then(argument(SRC_ARG, string())
+				.suggests(Commands::LoadedPaintingSuggestion)
 				.then(argument(DST_ARG, string())
+					.suggests(Commands::ValidPaintingSuggestion)
 					.executes(Commands::MigrateLiteral)
 				)
 			)
@@ -54,6 +64,7 @@ public class Commands
 		migrate.then(literal("regex")
 			.then(argument(SRC_ARG, string())
 				.then(argument(DST_ARG, string())
+					.suggests(Commands::ValidPaintingSuggestion)
 					.executes(Commands::MigrateRegex)
 				)
 			)
@@ -61,6 +72,25 @@ public class Commands
 
 		root.then(migrate);
 		dispatcher.register(root);
+	}
+
+	static private void	SuggestWhenAppropriate(SuggestionsBuilder builder, String suggestion){
+		if (suggestion.contains(builder.getRemaining())){
+			builder.suggest('"'+suggestion+'"');
+		}
+	}
+
+	static private CompletableFuture<Suggestions> ValidPaintingSuggestion(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder){
+		for (Identifier id : Registries.PAINTING_VARIANT.getIds())
+			SuggestWhenAppropriate(builder, id.toString());
+		return builder.buildFuture();
+	}
+
+	static private CompletableFuture<Suggestions> LoadedPaintingSuggestion(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder){
+		for (Entity e : context.getSource().getWorld().iterateEntities())
+		if  (e instanceof PaintingEntity painting)
+			SuggestWhenAppropriate(builder, IPaintingEntityDuck.Of(painting).nokebab$GetIntendedVariant());
+		return builder.buildFuture();
 	}
 
 	static private int MigrateLiteral(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {

@@ -16,15 +16,14 @@ Client-side installation only adds cosmetic changes to invalid painting, to make
 
 The command `/nokebab migrate <mode> <source> <destination>` can be used to change the variant of existing paintings in bulk. It requires a permisssion level of 3 (Admin).
 
-**This will only change the variant of placed paintings in currently loaded chunks** Paintings in item form or in loaded chunks will not be affected.
+**This will only change the variant of placed paintings in currently loaded chunks** Paintings in item form or in unloaded chunks will not be affected.
 
-**This doesn't check the validity of the migration**. It's possible to use this command to turn valid paintings into invalid ones, and to increase their size such that they will no longer be able to remain hung to the wall.
+If a migration would result in the painting no longer being able to fit, this painting will be skipped with an error message.
 
 ### Synopsis
 `/nokebab migrate <mode> <source> <destination>`
 
-`<source>` is the variant of paintings that should be migrated.
-`<destination>` is the variant they will be replaced with.
+`<source>` is the variant of paintings that should be migrated. `<destination>` is the variant they will be replaced with. The specifics vary depending on the mode.
 
 `<mode>` can be either `literal` or `regex`.
 "Literal" will seek paintings that exactly match the source, and change them all to the same variant.

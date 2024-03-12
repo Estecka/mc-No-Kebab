@@ -95,16 +95,16 @@ public class Commands
 	}
 
 	static int SendFeedback(CommandContext<ServerCommandSource> context, Migration.Result result, Text success){
-		int r = 0;
+		if (result.total() <= 0) {
+			context.getSource().sendError(ServersideTranslatable(FAILURE_MSG));
+			return 0;
+		}
 
+		int r = 0;
 		if (result.success() > 0){
 			context.getSource().sendFeedback(success, true);
 			r = 1;
 		}
-		else {
-			context.getSource().sendError(ServersideTranslatable(FAILURE_MSG));
-		}
-
 		if (result.error() > 0){
 			context.getSource().sendError(ServersideTranslatable(SIZEERROR_MSG, result.error()));
 			r = -1;
@@ -117,11 +117,12 @@ public class Commands
 		String src = getString(context, SRC_ARG);
 		String dst = getString(context, DST_ARG);
 
-		Migration.Result result = Migration.Literal(src, dst, context.getSource().getWorld());
+		Migration.Result result = new Migration.Literal(src, dst).Run(context.getSource().getWorld().iterateEntities());
 		return SendFeedback(context, result, ServersideTranslatable(SUCCESS_MSG_LIT, result.success(), src, dst));
 	}
 
 	static private int MigrateRegex(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		String substitution = getString(context, DST_ARG);
 		Pattern regex;
 		try {
 			regex = Pattern.compile(getString(context, SRC_ARG));
@@ -131,7 +132,7 @@ public class Commands
 			return -1;
 		}
 
-		Migration.Result result = Migration.Regex(regex, getString(context, DST_ARG), context.getSource().getWorld());
+		Migration.Result result = new Migration.Regex(regex, substitution).Run(context.getSource().getWorld().iterateEntities());
 		return SendFeedback(context, result, ServersideTranslatable(SUCCESS_MSG, result.success()));
 	}
 

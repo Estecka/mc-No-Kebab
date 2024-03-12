@@ -25,43 +25,54 @@ public abstract class PaintingEntityMixin
 extends AbstractDecorationEntity
 implements IPaintingEntityDuck
 {
-	static private final TrackedData<String> RAW_VARIANT = DataTracker.registerData(PaintingEntity.class, TrackedDataHandlerRegistry.STRING);
+	static private final TrackedData<String> MISSING_VARIANT = DataTracker.registerData(PaintingEntity.class, TrackedDataHandlerRegistry.STRING);
 
 	private PaintingEntityMixin(){ super(null, null); }
 
+	@Override
+	public @NotNull String	nokebab$GetMissingVariant(){
+		return this.getDataTracker().get(MISSING_VARIANT);
+	}
+
+	@Override
+	public void	nokebab$SetMissingVariant(@NotNull String value){
+		this.getDataTracker().set(MISSING_VARIANT, value);
+	}
+
+	@Override
+	public @NotNull String nokebab$GetIntendedVariant(){
+		String missing = this.nokebab$GetMissingVariant();
+		if (!missing.isEmpty())
+			return missing;
+		else
+			return ((PaintingEntity)(Object)this).getVariant().getKey().get().getValue().toString();
+	}
+
 	@Inject( method="initDataTracker", at=@At("HEAD") )
-	private void	initRawVariant(CallbackInfo info){
-		this.getDataTracker().startTracking(RAW_VARIANT, "");
-	}
-
-	public @NotNull String	nokebab$GetRawVariant(){
-		return this.getDataTracker().get(RAW_VARIANT);
-	}
-
-	public void	nokebab$SetRawVariant(@NotNull String value){
-		this.getDataTracker().set(RAW_VARIANT, value);
+	private void	InitMissingTracker(CallbackInfo info){
+		this.getDataTracker().startTracking(MISSING_VARIANT, "");
 	}
 
 	@Inject( method="setVariant", at=@At("HEAD") )
 	private void	DiscardMissingno(RegistryEntry<PaintingVariant> entry, CallbackInfo info){
-		final String rawVariant = this.nokebab$GetRawVariant();
-		if (!rawVariant.isEmpty()){
-			NoKebab.LOGGER.warn("Missingno painting had its variant changed from \"{}\" to {}", rawVariant, entry.getKey());
-			this.nokebab$SetRawVariant("");
+		final String missingName = this.nokebab$GetMissingVariant();
+		if (!missingName.isEmpty()){
+			NoKebab.LOGGER.warn("Missingno painting had its variant changed from \"{}\" to {}", missingName, entry.getKey());
+			this.nokebab$SetMissingVariant("");
 		}
 	}
 
 	@WrapOperation( method="writeCustomDataToNbt", at=@At(value="INVOKE", target="net/minecraft/entity/decoration/painting/PaintingEntity.writeVariantToNbt (Lnet/minecraft/nbt/NbtCompound;Lnet/minecraft/registry/entry/RegistryEntry;)V") )
 	private void	WriteMissingVariantToNBT(NbtCompound nbt, RegistryEntry<PaintingVariant> entry, Operation<Void> original) {
-		final String rawVariant = this.nokebab$GetRawVariant();
+		final String missingName = this.nokebab$GetMissingVariant();
 
-		if (rawVariant.isEmpty())
+		if (missingName.isEmpty())
 			original.call(nbt, entry);
 		else {
-			nbt.putString(PaintingEntity.VARIANT_NBT_KEY, rawVariant);
+			nbt.putString(PaintingEntity.VARIANT_NBT_KEY, missingName);
 			if (!entry.matchesId(Registries.PAINTING_VARIANT.getDefaultId())){
 				NoKebab.LOGGER.error("Painting is Missingno, but active variant is not the default one: {} {} ", this.getPos(), this.getUuid());
-				NoKebab.LOGGER.error("Known: \"{}\" Active: {}", rawVariant, entry.getKey());
+				NoKebab.LOGGER.error("Known: \"{}\" Active: {}", missingName, entry.getKey());
 			}
 		}
 	}
@@ -81,6 +92,6 @@ implements IPaintingEntityDuck
 			NoKebab.LOGGER.warn("Painting with missing ID: \"{}\" {} {}", nbtString, this.getPos(), this.getUuid());
 
 		if (!valid || !exists)
-			this.nokebab$SetRawVariant(nbtString);
+			this.nokebab$SetMissingVariant(nbtString);
 	}
 }

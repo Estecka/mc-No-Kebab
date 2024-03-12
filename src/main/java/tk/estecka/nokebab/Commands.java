@@ -1,5 +1,7 @@
 package tk.estecka.nokebab;
 
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -21,8 +23,8 @@ import static net.minecraft.command.argument.EntityArgumentType.getEntities;
 
 public class Commands
 {
-	static private final String SRCVAR_ARG = "source variant";
-	static private final String DSTVAR_ARG = "destination variant";
+	static private final String SRC_ARG = "source";
+	static private final String DST_ARG = "destination";
 
 	static private final String SUCCESS_MSG = "command.nokebab.migrate.success";
 	static private final String FAILURE_MSG = "command.nokebab.migrate.failure";
@@ -41,9 +43,17 @@ public class Commands
 		final var migrate = literal("migrate");
 
 		migrate.then(literal("literal")
-			.then(argument(SRCVAR_ARG, string())
-				.then(argument(DSTVAR_ARG, string())
+			.then(argument(SRC_ARG, string())
+				.then(argument(DST_ARG, string())
 					.executes(Commands::MigrateLiteral)
+				)
+			)
+		);
+
+		migrate.then(literal("regex")
+			.then(argument(SRC_ARG, string())
+				.then(argument(DST_ARG, string())
+					.executes(Commands::MigrateRegex)
 				)
 			)
 		);
@@ -53,12 +63,37 @@ public class Commands
 	}
 
 	static private int MigrateLiteral(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		int r = Migration.Migrate(
-			getString(context, SRCVAR_ARG),
-			getString(context, DSTVAR_ARG),
+		int r = Migration.Literal(
+			getString(context, SRC_ARG),
+			getString(context, DST_ARG),
 			context.getSource().getWorld()
 		);
 
+		if (r > 0){
+			context.getSource().sendFeedback(ServersideTranslatable(SUCCESS_MSG, r), true);
+			return 1;
+		}
+		else{
+			context.getSource().sendError(ServersideTranslatable(FAILURE_MSG));
+			return 0;
+		}
+	}
+
+	static private int MigrateRegex(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		Pattern regex;
+		try {
+			regex = Pattern.compile(getString(context, SRC_ARG));
+		}
+		catch (PatternSyntaxException e){
+			context.getSource().sendError(Text.literal("Bad regex"));
+			return -1;
+		}
+
+		int r = Migration.Regex(
+			regex,
+			getString(context, DST_ARG),
+			context.getSource().getWorld()
+		);
 		if (r > 0){
 			context.getSource().sendFeedback(ServersideTranslatable(SUCCESS_MSG, r), true);
 			return 1;

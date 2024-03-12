@@ -9,6 +9,8 @@ public interface IPaintingEntityDuck
 		return (IPaintingEntityDuck)painting;
 	}
 
-	public @NotNull String nokebab$GetRawVariant();
-	public void nokebab$SetRawVariant(@NotNull String id);
+	public @NotNull String nokebab$GetMissingVariant();
+	public void nokebab$SetMissingVariant(@NotNull String id);
+
+	public @NotNull String nokebab$GetIntendedVariant();
 }

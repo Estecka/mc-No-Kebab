@@ -36,6 +36,7 @@ public class Commands
 	static private final String SUCCESS_MSG_LIT = "command.nokebab.migrate.success.literal";
 	static private final String SUCCESS_MSG = "command.nokebab.migrate.success";
 	static private final String FAILURE_MSG = "command.nokebab.migrate.failure";
+	static private final String SIZEERROR_MSG = "command.nokebab.migrate.sizeError";
 
 	static private MutableText ServersideTranslatable(String key, Object ... args){
 		return Text.translatableWithFallback(key, I18n.translate(key, args), args);
@@ -93,19 +94,31 @@ public class Commands
 		return builder.buildFuture();
 	}
 
+	static int SendFeedback(CommandContext<ServerCommandSource> context, Migration.Result result, Text success){
+		int r = 0;
+
+		if (result.success() > 0){
+			context.getSource().sendFeedback(success, true);
+			r = 1;
+		}
+		else {
+			context.getSource().sendError(ServersideTranslatable(FAILURE_MSG));
+		}
+
+		if (result.error() > 0){
+			context.getSource().sendError(ServersideTranslatable(SIZEERROR_MSG, result.error()));
+			r = -1;
+		}
+
+		return r;
+	}
+
 	static private int MigrateLiteral(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
 		String src = getString(context, SRC_ARG);
 		String dst = getString(context, DST_ARG);
 
-		int r = Migration.Literal(src, dst, context.getSource().getWorld());
-		if (r > 0){
-			context.getSource().sendFeedback(ServersideTranslatable(SUCCESS_MSG_LIT, r, src, dst), true);
-			return 1;
-		}
-		else{
-			context.getSource().sendError(ServersideTranslatable(FAILURE_MSG));
-			return 0;
-		}
+		Migration.Result result = Migration.Literal(src, dst, context.getSource().getWorld());
+		return SendFeedback(context, result, ServersideTranslatable(SUCCESS_MSG_LIT, result.success(), src, dst));
 	}
 
 	static private int MigrateRegex(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
@@ -118,19 +131,8 @@ public class Commands
 			return -1;
 		}
 
-		int r = Migration.Regex(
-			regex,
-			getString(context, DST_ARG),
-			context.getSource().getWorld()
-		);
-		if (r > 0){
-			context.getSource().sendFeedback(ServersideTranslatable(SUCCESS_MSG, r), true);
-			return 1;
-		}
-		else{
-			context.getSource().sendError(ServersideTranslatable(FAILURE_MSG));
-			return 0;
-		}
+		Migration.Result result = Migration.Regex(regex, getString(context, DST_ARG), context.getSource().getWorld());
+		return SendFeedback(context, result, ServersideTranslatable(SUCCESS_MSG, result.success()));
 	}
 
 }

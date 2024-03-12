@@ -41,7 +41,7 @@ extends EntityRenderer<PaintingEntity>
 	@Inject( method="render", at=@At("TAIL") )
 	private void	renderMissingnoLabel(PaintingEntity painting, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertex, int light, CallbackInfo info)
 	{
-		String missingName = IPaintingEntityDuck.Of(painting).nokebab$GetMissingVariant();
+		String missingName = IPaintingEntityDuck.Of(painting).nokebab$GetMissingName();
 
 		if (!missingName.isEmpty()) {
 			final TextRenderer textRenderer = this.getTextRenderer();
@@ -68,7 +68,7 @@ extends EntityRenderer<PaintingEntity>
 
 	@WrapOperation( method="render", at=@At(value="INVOKE", target="net/minecraft/client/render/entity/PaintingEntityRenderer.renderPainting (Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/entity/decoration/painting/PaintingEntity;IILnet/minecraft/client/texture/Sprite;Lnet/minecraft/client/texture/Sprite;)V") )
 	private void	renderMissingno(PaintingEntityRenderer renderer, MatrixStack matrices, VertexConsumer vertexConsumer, PaintingEntity painting, int width, int height, Sprite paintingSprite, Sprite backSprite, Operation<Void> original) {
-		if (!IPaintingEntityDuck.Of(painting).nokebab$GetMissingVariant().isEmpty()) {
+		if (!IPaintingEntityDuck.Of(painting).nokebab$GetMissingName().isEmpty()) {
 			ISpriteAtlasHolderMixin atlas = (ISpriteAtlasHolderMixin)MinecraftClient.getInstance().getPaintingManager();
 			paintingSprite = atlas.GetSpriteFromID(MISSINGNO_ID);
 		}

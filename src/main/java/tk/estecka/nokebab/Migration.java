@@ -14,6 +14,7 @@ import net.minecraft.util.Identifier;
 
 public class Migration 
 {
+	static public record Result(int success, int error) {}
 
 	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(String name){
 		Identifier id = Identifier.tryParse(name);
@@ -32,7 +33,7 @@ public class Migration
 	}
 
 	static public boolean Matches(PaintingEntity painting, String variant){
-		String raw = IPaintingEntityDuck.Of(painting).nokebab$GetMissingVariant();
+		String raw = IPaintingEntityDuck.Of(painting).nokebab$GetMissingName();
 		if (!raw.isEmpty())
 			return raw.equals(variant);
 		else {
@@ -41,13 +42,28 @@ public class Migration
 		}
 	}
 
+	static public boolean TryMigrate(PaintingEntity painting, String missing, RegistryEntry<PaintingVariant> active){
+		IPaintingEntityDuck duck = IPaintingEntityDuck.Of(painting);
+		
+		var original = duck.nokebab$GetState();
+		duck.nokebab$SetState(missing, active);
+
+		if (painting.canStayAttached())
+			return true;
+		else {
+			duck.nokebab$SetState(original);
+			return false;
+		}
+	}
+
 	/***
 	 * @param src The variant id to migrate
 	 * @param dst The variant id it will be replaced with.
 	 * @return The amount of paintings that were succesfully migrated.
 	 */
-	static public int Literal(String src, String dst, ServerWorld world){
-		int r = 0;
+	static public Result Literal(String src, String dst, ServerWorld world){
+		int ok = 0;
+		int err = 0;
 		var dstEntry = GetEntry(dst);
 
 		if (dstEntry == null)
@@ -58,12 +74,15 @@ public class Migration
 		for (Entity e : world.iterateEntities())
 		if  (e instanceof PaintingEntity painting && Matches(painting, src))
 		{
-			++r;
-			painting.setVariant(dstEntry);
-			IPaintingEntityDuck.Of(painting).nokebab$SetMissingVariant(dst);
+			if (TryMigrate(painting, dst, dstEntry))
+				++ok;
+			else {
+				NoKebab.LOGGER.warn("Painting could not be migrated to \"{}\" due to size constraint: {} {}", src, painting.getUuid(), painting.getPos());
+				++err;
+			}
 		}
 
-		return r;
+		return new Result(ok, err);
 	}
 
 	
@@ -72,8 +91,9 @@ public class Migration
 	 * @param dst The variant id it will be replaced with.
 	 * @return The amount of paintings that were succesfully migrated.
 	 */
-	static public int Regex(Pattern regex, String substitution, ServerWorld world){
-		int r = 0;
+	static public Result Regex(Pattern regex, String substitution, ServerWorld world){
+		int ok = 0;
+		int err = 0;
 
 		for (Entity e : world.iterateEntities())
 		if  (e instanceof PaintingEntity painting)
@@ -82,21 +102,26 @@ public class Migration
 			Matcher match = regex.matcher(src);
 			if (match.matches())
 			{
-				++r;
 				String dst = match.replaceAll(substitution);
-				NoKebab.LOGGER.info("Migrated painting from \"{}\" to \"{}\"", src, dst);
-
+				
+				String missingName = dst;
 				var dstEntry = GetEntry(dst);
 				if (dstEntry == null)
 					dstEntry = GetEntry(Registries.PAINTING_VARIANT.getDefaultId());
 				else
-					dst = "";
+					missingName = "";
 
-				painting.setVariant(dstEntry);
-				IPaintingEntityDuck.Of(painting).nokebab$SetMissingVariant(dst);
+				if (TryMigrate(painting, dst, dstEntry)){
+					NoKebab.LOGGER.info("Migrated painting from \"{}\" to \"{}\"", src, dst);
+					++ok;
+				}
+				else{
+					NoKebab.LOGGER.warn("Painting could not be migrated to \"{}\" due to size constraint: {} {}", src, painting.getUuid(), painting.getPos());
+					++err;
+				}
 			}
 		}
 
-		return r;
+		return new Result(ok, err);
 	}
 }

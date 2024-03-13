@@ -2,15 +2,18 @@ package tk.estecka.nokebab.mixin;
 
 import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.PaintingEntityRenderer;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
@@ -27,25 +30,25 @@ import tk.estecka.nokebab.IPaintingEntityDuck;
  * w = cos(roll/2) * cos(pitch/2) * cos(yaw/2) + sin(roll/2) * sin(pitch/2) * sin(yaw/2)
  */
 
+@Environment(EnvType.CLIENT)
 @Mixin(PaintingEntityRenderer.class)
 public abstract class PaintingEntityRendererMixin 
+extends EntityRenderer<PaintingEntity>
 {
 	static private final Identifier MISSINGNO_ID = new Identifier("nokebab", "missingno");
-	private final PaintingEntityRenderer paintingRenderer = (PaintingEntityRenderer)(Object)this;
 
 
-	@Shadow
-	private void renderPainting(MatrixStack matrices, VertexConsumer vertexConsumer, PaintingEntity entity, int width, int height, Sprite paintingSprite, Sprite backSprite)
-	{ throw new AssertionError(); }
+	private PaintingEntityRendererMixin(){ super(null); }
 
 
 	@Inject( method="render", at=@At("TAIL") )
-	void	renderMissingnoLabel(PaintingEntity painting, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertex, int light, CallbackInfo info)
+	private void	renderMissingnoLabel(PaintingEntity painting, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertex, int light, CallbackInfo info)
 	{
-		if (!IPaintingEntityDuck.Of(painting).GetRawVariant().isEmpty()) {
-			final TextRenderer textRenderer = paintingRenderer.getTextRenderer();
-			String variantId = IPaintingEntityDuck.Of(painting).GetRawVariant();
-			float x = -textRenderer.getWidth(variantId)/2;
+		String missingName = IPaintingEntityDuck.Of(painting).nokebab$GetMissingName();
+
+		if (!missingName.isEmpty()) {
+			final TextRenderer textRenderer = this.getTextRenderer();
+			float x = -textRenderer.getWidth(missingName)/2;
 			float y = -painting.getHeight();
 
 			// For the text renderer: roll is X, yaw is Z, pitch is Y
@@ -61,18 +64,18 @@ public abstract class PaintingEntityRendererMixin
 			matrices.scale(-0.025f, -0.025f, -0.025f);
 			matrices.multiply(entityRotation);
 			matrices.translate(0, -4, 2.5f);
-			textRenderer.drawWithOutline(Text.literal(variantId).asOrderedText(), x, y, 0xffff88ff, 0xff000000, matrices.peek().getPositionMatrix(), vertex, light);
+			textRenderer.drawWithOutline(Text.literal(missingName).asOrderedText(), x, y, 0xffff88ff, 0xff000000, matrices.peek().getPositionMatrix(), vertex, light);
 			matrices.pop();
 		}
 	}
 
-	@Redirect( method="render", at=@At(value="INVOKE", target="net/minecraft/client/render/entity/PaintingEntityRenderer.renderPainting (Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/entity/decoration/painting/PaintingEntity;IILnet/minecraft/client/texture/Sprite;Lnet/minecraft/client/texture/Sprite;)V") )
-	void	renderMissingno(PaintingEntityRenderer renderer, MatrixStack matrices, VertexConsumer vertexConsumer, PaintingEntity painting, int width, int height, Sprite paintingSprite, Sprite backSprite) {
-		if (!IPaintingEntityDuck.Of(painting).GetRawVariant().isEmpty()) {
+	@WrapOperation( method="render", at=@At(value="INVOKE", target="net/minecraft/client/render/entity/PaintingEntityRenderer.renderPainting (Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/entity/decoration/painting/PaintingEntity;IILnet/minecraft/client/texture/Sprite;Lnet/minecraft/client/texture/Sprite;)V") )
+	private void	renderMissingno(PaintingEntityRenderer renderer, MatrixStack matrices, VertexConsumer vertexConsumer, PaintingEntity painting, int width, int height, Sprite paintingSprite, Sprite backSprite, Operation<Void> original) {
+		if (!IPaintingEntityDuck.Of(painting).nokebab$GetMissingName().isEmpty()) {
 			ISpriteAtlasHolderMixin atlas = (ISpriteAtlasHolderMixin)MinecraftClient.getInstance().getPaintingManager();
 			paintingSprite = atlas.GetSpriteFromID(MISSINGNO_ID);
 		}
-		this.renderPainting(matrices, vertexConsumer, painting, width, height, paintingSprite, backSprite);
+		original.call(renderer, matrices, vertexConsumer, painting, width, height, paintingSprite, backSprite);
 	}
 
 }

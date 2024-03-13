@@ -37,6 +37,7 @@ public class Commands
 	static private final String SUCCESS_MSG = "command.nokebab.migrate.success";
 	static private final String FAILURE_MSG = "command.nokebab.migrate.failure";
 	static private final String SIZEERROR_MSG = "command.nokebab.migrate.sizeError";
+	static private final String BAD_REGEX_MSG = "command.nokebab.badRegex";
 
 	static private MutableText ServersideTranslatable(String key, Object ... args){
 		return Text.translatableWithFallback(key, I18n.translate(key, args), args);
@@ -128,7 +129,7 @@ public class Commands
 			regex = Pattern.compile(getString(context, SRC_ARG));
 		}
 		catch (PatternSyntaxException e){
-			context.getSource().sendError(Text.literal("Bad regex"));
+			context.getSource().sendError(ServersideTranslatable(BAD_REGEX_MSG));
 			return -1;
 		}
 

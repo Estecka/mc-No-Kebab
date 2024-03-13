@@ -1,5 +1,6 @@
 package tk.estecka.nokebab;
 
+import java.util.IllegalFormatException;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -9,7 +10,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.client.resource.language.I18n;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.entity.Entity;
@@ -19,6 +19,7 @@ import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Language;
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
 import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
@@ -40,7 +41,18 @@ public class Commands
 	static private final String BAD_REGEX_MSG = "command.nokebab.badRegex";
 
 	static private MutableText ServersideTranslatable(String key, Object ... args){
-		return Text.translatableWithFallback(key, I18n.translate(key, args), args);
+		String fallback = Language.getInstance().get(key);
+		for (int i=0; i<args.length; ++i)
+			args[i] = args[i].toString();
+
+		try {
+			fallback = String.format(fallback, args);
+		}
+		catch(IllegalFormatException e){
+			NoKebab.LOGGER.error("Could not translate {}\n{}", key, e);
+		}
+
+		return Text.translatableWithFallback(key, fallback, args);
 	}
 
 

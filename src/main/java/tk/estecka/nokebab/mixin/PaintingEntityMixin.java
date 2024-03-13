@@ -12,13 +12,13 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import tk.estecka.nokebab.IPaintingEntityDuck;
 import tk.estecka.nokebab.NoKebab;
+import tk.estecka.nokebab.PaintingState;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.ibm.icu.impl.Pair;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
@@ -45,26 +45,13 @@ implements IPaintingEntityDuck
 	}
 
 	@Override
-	public @NotNull String nokebab$GetIntendedVariant(){
-		String missing = this.nokebab$GetMissingName();
-		if (!missing.isEmpty())
-			return missing;
-		else
-			return this.getVariant().getKey().get().getValue().toString();
-	}
-	
-	@Override
-	public Pair<String, RegistryEntry<PaintingVariant>> nokebab$GetState(){
-		return Pair.of(this.nokebab$GetMissingName(), this.getVariant());
+	public PaintingState nokebab$GetState(){
+		return new PaintingState(this.nokebab$GetMissingName(), this.getVariant());
 	}
 	@Override
-	public void nokebab$SetState(Pair<String,RegistryEntry<PaintingVariant>> state){
-		this.nokebab$SetState(state.first, state.second);
-	}
-	@Override
-	public void nokebab$SetState(String missingName, RegistryEntry<PaintingVariant> activeVariant){
-		this.setVariant(activeVariant);
-		this.nokebab$SetMissingName(missingName);
+	public void nokebab$SetState(PaintingState state){
+		this.setVariant(state.activeVariant());
+		this.nokebab$SetMissingName(state.missingName());
 	}
 
 

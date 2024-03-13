@@ -103,7 +103,7 @@ public class Commands
 	static private CompletableFuture<Suggestions> LoadedPaintingSuggestion(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder){
 		for (Entity e : context.getSource().getWorld().iterateEntities())
 		if  (e instanceof PaintingEntity painting)
-			SuggestWhenAppropriate(builder, IPaintingEntityDuck.Of(painting).nokebab$GetIntendedVariant());
+			SuggestWhenAppropriate(builder, IPaintingEntityDuck.Of(painting).nokebab$GetState().GetIntendedName());
 		return builder.buildFuture();
 	}
 

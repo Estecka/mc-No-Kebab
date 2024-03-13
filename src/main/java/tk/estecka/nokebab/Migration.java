@@ -1,21 +1,14 @@
 package tk.estecka.nokebab;
 
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import com.ibm.icu.impl.Pair;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
-import net.minecraft.entity.decoration.painting.PaintingVariant;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Identifier;
 
 public abstract class Migration
-implements Function<PaintingEntity, Pair<String, RegistryEntry<PaintingVariant>>>
+implements Function<PaintingEntity, PaintingState>
 {
 	static public record Result(int success, int error) {
 		public int total(){ return success + error; }
@@ -24,41 +17,11 @@ implements Function<PaintingEntity, Pair<String, RegistryEntry<PaintingVariant>>
 	/**
 	 * @return Null if the migration does not match the painting. Otherwise, the
 	 * state the painting should be moved to.
-	 *
-	 * The string should be empty if the target variant is valid. The registry 
-	 * entry should point to minecraft:kebab if the target variant is invalid.
 	 */
 	@Override
-	public abstract @Nullable Pair<@NotNull String, RegistryEntry<PaintingVariant>> apply(PaintingEntity painting);
+	public abstract @Nullable PaintingState apply(PaintingEntity painting);
 
-
-	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(String name){
-		Identifier id = Identifier.tryParse(name);
-		if (id == null)
-			return null;
-		else
-			return GetEntry(id);
-	}
-
-	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(Identifier id){
-		var variant = Registries.PAINTING_VARIANT.getOrEmpty(id);
-		if (variant.isEmpty())
-			return null;
-		else
-			return Registries.PAINTING_VARIANT.getEntry(variant.get());
-	}
-
-	static public Pair<String, RegistryEntry<PaintingVariant>> GetState(String name){
-		var entry = GetEntry(name);
-		if (entry == null)
-			entry = GetEntry(Registries.PAINTING_VARIANT.getDefaultId());
-		else
-			name = "";
-
-		return Pair.of(name, entry);
-	}
-
-	static public boolean TryMigrate(PaintingEntity painting, Pair<String, RegistryEntry<PaintingVariant>> state){
+	static public boolean TryMigrate(PaintingEntity painting, PaintingState state){
 		IPaintingEntityDuck duck = IPaintingEntityDuck.Of(painting);
 		
 		var original = duck.nokebab$GetState();
@@ -79,14 +42,14 @@ implements Function<PaintingEntity, Pair<String, RegistryEntry<PaintingVariant>>
 		for (Entity e : entities)
 		if  (e instanceof PaintingEntity painting)
 		{
-			var state = this.apply(painting);
+			PaintingState state = this.apply(painting);
 			if (state == null)
 				continue;
 
-			String src = IPaintingEntityDuck.Of(painting).nokebab$GetIntendedVariant();
+			String src = IPaintingEntityDuck.Of(painting).nokebab$GetState().GetIntendedName();
+			String dst = state.GetIntendedName();
 
 			if (TryMigrate(painting, state)){
-				String dst = IPaintingEntityDuck.Of(painting).nokebab$GetIntendedVariant();
 				NoKebab.LOGGER.info("Migrated painting from \"{}\" to \"{}\"", src, dst);
 				++ok;
 			}
@@ -103,25 +66,19 @@ implements Function<PaintingEntity, Pair<String, RegistryEntry<PaintingVariant>>
 	extends Migration
 	{
 		private final String source;
-		private final Pair<String, RegistryEntry<PaintingVariant>> destination;
+		private final PaintingState destination;
 
 		public Literal(String source, String destination){
 			this.source = source;
-			this.destination = GetState(destination);
+			this.destination = PaintingState.ForName(destination);
 		}
 
 		public boolean Matches(PaintingEntity painting){
-			String raw = IPaintingEntityDuck.Of(painting).nokebab$GetMissingName();
-			if (!raw.isEmpty())
-				return raw.equals(source);
-			else {
-				Identifier id = painting.getVariant().getKey().get().getValue();
-				return Objects.equals(id, Identifier.tryParse(source));
-			}
+			return source.equals(IPaintingEntityDuck.Of(painting).nokebab$GetState().GetIntendedName());
 		}
 
 		@Override
-		public @Nullable Pair<@NotNull String, RegistryEntry<PaintingVariant>> apply(PaintingEntity painting){
+		public @Nullable PaintingState apply(PaintingEntity painting){
 			return this.Matches(painting) ? this.destination : null;
 		}
 	}
@@ -138,13 +95,13 @@ implements Function<PaintingEntity, Pair<String, RegistryEntry<PaintingVariant>>
 		}
 
 		@Override
-		public @Nullable Pair<@NotNull String, RegistryEntry<PaintingVariant>> apply(PaintingEntity painting){
-			String src = IPaintingEntityDuck.Of(painting).nokebab$GetIntendedVariant();
+		public @Nullable PaintingState apply(PaintingEntity painting){
+			String src = IPaintingEntityDuck.Of(painting).nokebab$GetState().GetIntendedName();
 			Matcher match = this.source.matcher(src);
 			if (!match.matches())
 				return null;
 			else
-				return GetState(match.replaceAll(this.destination));
+				return PaintingState.ForName(match.replaceAll(this.destination));
 		}
 	}
 }

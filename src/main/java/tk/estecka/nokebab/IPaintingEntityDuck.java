@@ -1,17 +1,17 @@
 package tk.estecka.nokebab;
 
+import org.jetbrains.annotations.NotNull;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
-import net.minecraft.entity.Entity;
 
 public interface IPaintingEntityDuck 
 {
-	static public IPaintingEntityDuck	Of(PaintingEntity painting){
+	static public IPaintingEntityDuck Of(PaintingEntity painting){
 		return (IPaintingEntityDuck)painting;
 	}
 
-	static public IPaintingEntityDuck	Of(Entity entity){
-		return (IPaintingEntityDuck)entity;
-	}
+	public @NotNull String nokebab$GetMissingName();
+	public void nokebab$SetMissingName(@NotNull String id);
 
-	public String	GetRawVariant();
+	public PaintingState nokebab$GetState();
+	public void nokebab$SetState(PaintingState state);
 }

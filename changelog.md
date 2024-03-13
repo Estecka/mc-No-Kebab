@@ -13,3 +13,4 @@ Initial Release
 
 ##	1.2
 - Added the command `/nokebab migrate`
+- Fixed some benign warnings when running on server-only environnement.

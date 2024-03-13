@@ -7,6 +7,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumer;
@@ -28,6 +30,7 @@ import tk.estecka.nokebab.IPaintingEntityDuck;
  * w = cos(roll/2) * cos(pitch/2) * cos(yaw/2) + sin(roll/2) * sin(pitch/2) * sin(yaw/2)
  */
 
+@Environment(EnvType.CLIENT)
 @Mixin(PaintingEntityRenderer.class)
 public abstract class PaintingEntityRendererMixin 
 extends EntityRenderer<PaintingEntity>

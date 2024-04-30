@@ -20,4 +20,5 @@ Initial Release
 
 ## 1.3
 - Added the command `/nokebab give`
+- Custom DataTrackers can be disabled in the config. Those are off by default on dedicated servers.
 

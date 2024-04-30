@@ -11,5 +11,5 @@ Current master
 - `DataTracker::startTracking` was removed. `Entity::initDataTracker` now takes a builder as parameter.
 - Variant-locked painting now have an EntityData component. (The item is still able to hold invalid variant.)
 #### Possible Workaround
-- Vanilla Clients now crash when receiving data from non-vanilla data trackers: Use display entities instead ?
+- **Vanilla Clients now crash when receiving data from modded data trackers**. Use display entities instead ?
 - `PaintingEntity::VARIANT_NBT_KEY` was removed: Use literal instead.

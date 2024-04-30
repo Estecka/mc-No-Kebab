@@ -16,33 +16,47 @@ import tk.estecka.nokebab.PaintingState;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
+@Unique
 @Mixin(PaintingEntity.class)
 public abstract class PaintingEntityMixin
 extends AbstractDecorationEntity
 implements IPaintingEntityDuck
 {
-	static private final TrackedData<String> MISSING_VARIANT = DataTracker.registerData(PaintingEntity.class, TrackedDataHandlerRegistry.STRING);
 	static private final String VARIANT_NBT_KEY = "variant";
+	static private final TrackedData<String> MISSING_TRACKER;
+
+	static {
+		if (NoKebab.areCustomTrackersEnabled())
+			MISSING_TRACKER = DataTracker.registerData(PaintingEntity.class, TrackedDataHandlerRegistry.STRING);
+		else
+			MISSING_TRACKER = null;
+	}
+	
+
+	private @NotNull String MISSING_VARIANT = "";
 
 	private PaintingEntityMixin(){ super(null, null); }
-
 	@Shadow public abstract RegistryEntry<PaintingVariant> getVariant();
 	@Shadow public abstract void setVariant(RegistryEntry<PaintingVariant> variant);
 
 
 	@Override
 	public @NotNull String	nokebab$GetMissingName(){
-		return this.getDataTracker().get(MISSING_VARIANT);
+		return NoKebab.areCustomTrackersEnabled() ? this.dataTracker.get(MISSING_TRACKER) : MISSING_VARIANT;
 	}
 	@Override
 	public void	nokebab$SetMissingName(@NotNull String value){
-		this.getDataTracker().set(MISSING_VARIANT, value);
+		if (NoKebab.areCustomTrackersEnabled())
+			this.dataTracker.set(MISSING_TRACKER, value);
+		else
+			this.MISSING_VARIANT = value;
 	}
 
 	@Override
@@ -58,7 +72,8 @@ implements IPaintingEntityDuck
 
 	@Inject( method="initDataTracker", at=@At("HEAD") )
 	private void	InitMissingTracker(DataTracker.Builder builder, CallbackInfo info){
-		builder.add(MISSING_VARIANT, "");
+		if (NoKebab.areCustomTrackersEnabled())
+			builder.add(MISSING_TRACKER, "");
 	}
 
 	@Inject( method="setVariant", at=@At("HEAD") )

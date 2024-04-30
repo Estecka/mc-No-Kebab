@@ -28,6 +28,7 @@ extends AbstractDecorationEntity
 implements IPaintingEntityDuck
 {
 	static private final TrackedData<String> MISSING_VARIANT = DataTracker.registerData(PaintingEntity.class, TrackedDataHandlerRegistry.STRING);
+	static private final String VARIANT_NBT_KEY = "variant";
 
 	private PaintingEntityMixin(){ super(null, null); }
 
@@ -56,8 +57,8 @@ implements IPaintingEntityDuck
 
 
 	@Inject( method="initDataTracker", at=@At("HEAD") )
-	private void	InitMissingTracker(CallbackInfo info){
-		this.getDataTracker().startTracking(MISSING_VARIANT, "");
+	private void	InitMissingTracker(DataTracker.Builder builder, CallbackInfo info){
+		builder.add(MISSING_VARIANT, "");
 	}
 
 	@Inject( method="setVariant", at=@At("HEAD") )
@@ -76,7 +77,7 @@ implements IPaintingEntityDuck
 		if (missingName.isEmpty())
 			original.call(nbt, entry);
 		else {
-			nbt.putString(PaintingEntity.VARIANT_NBT_KEY, missingName);
+			nbt.putString(VARIANT_NBT_KEY, missingName);
 			if (!entry.matchesId(Registries.PAINTING_VARIANT.getDefaultId())){
 				NoKebab.LOGGER.error("Painting is Missingno, but active variant is not the default one: {} {} ", this.getPos(), this.getUuid());
 				NoKebab.LOGGER.error("Known: \"{}\" Active: {}", missingName, entry.getKey());
@@ -86,7 +87,7 @@ implements IPaintingEntityDuck
 
 	@Inject( method="readCustomDataFromNbt", at=@At("TAIL") )
 	private void	preserveMissingVariantFromNBT(NbtCompound nbt, CallbackInfo info){
-		String nbtString = nbt.getString(PaintingEntity.VARIANT_NBT_KEY);
+		String nbtString = nbt.getString(VARIANT_NBT_KEY);
 		if (nbtString.isEmpty())
 			return;
 

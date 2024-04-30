@@ -9,5 +9,6 @@ Current master
 ### 1.20.5
 #### No Workaround:
 - `DataTracker::startTracking` was removed. `Entity::initDataTracker` now takes a builder as parameter.
+- Variant-locked painting now have an EntityData component. (The item is still able to hold invalid variant.)
 #### Possible Workaround
 - `PaintingEntity::VARIANT_NBT_KEY` was removed: Use literal instead.

@@ -11,6 +11,13 @@ Initial Release
 ### 1.1.
 - Missing ID label is now rendered with a full outline instead of a shadow.
 
-##	1.2
+## 1.2
+### 1.2.0
 - Added the command `/nokebab migrate`
 - Fixed some benign warnings when running on server-only environnement.
+### 1.2.1
+- Updated for 1.20.5
+
+## 1.3
+- Added the command `/nokebab give`
+

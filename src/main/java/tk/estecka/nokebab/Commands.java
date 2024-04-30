@@ -11,11 +11,17 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -33,6 +39,7 @@ public class Commands
 {
 	static private final String SRC_ARG = "source";
 	static private final String DST_ARG = "destination";
+	static private final String VARIANT_ARG = "variant";
 
 	static private final String SUCCESS_MSG_LIT = "command.nokebab.migrate.success.literal";
 	static private final String SUCCESS_MSG = "command.nokebab.migrate.success";
@@ -81,6 +88,12 @@ public class Commands
 					.suggests(Commands::ValidPaintingSuggestion)
 					.executes(Commands::MigrateRegex)
 				)
+			)
+		);
+
+		root.then(literal("give")
+			.then(argument(VARIANT_ARG, string())
+				.executes(Commands::GiveVariant)
 			)
 		);
 
@@ -147,6 +160,22 @@ public class Commands
 
 		Migration.Result result = new Migration.Regex(regex, substitution).Run(context.getSource().getWorld().iterateEntities());
 		return SendFeedback(context, result, ServersideTranslatable(SUCCESS_MSG, result.success()));
+	}
+
+	static private int GiveVariant(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		if (!(context.getSource().getEntity() instanceof ServerPlayerEntity player)){
+			return -1;
+		}
+
+		String rawVariant = getString(context, VARIANT_ARG);
+		NbtCompound entityData = new NbtCompound();
+		entityData.putString("id", "minecraft:painting");
+		entityData.putString("variant", rawVariant);
+
+		ItemStack stack = new ItemStack(Items.PAINTING);
+		stack.set(DataComponentTypes.ENTITY_DATA, NbtComponent.of(entityData));
+	
+		return player.getInventory().insertStack(stack) ? 1 : 0;
 	}
 
 }

@@ -17,3 +17,7 @@ Initial Release
 - Fixed some benign warnings when running on server-only environnement.
 ### 1.2.1
 - Updated for 1.20.5
+
+## 1.3
+- Added the command `/nokebab give`
+- Custom DataTrackers can be disabled in the config. Those are off by default on dedicated servers.

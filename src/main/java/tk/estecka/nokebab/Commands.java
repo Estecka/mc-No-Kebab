@@ -29,6 +29,7 @@ import net.minecraft.util.Language;
 import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
 import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
+import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static net.minecraft.server.command.CommandManager.literal;
 import static net.minecraft.server.command.CommandManager.argument;
@@ -92,7 +93,7 @@ public class Commands
 		);
 
 		root.then(literal("give")
-			.then(argument(VARIANT_ARG, string())
+			.then(argument(VARIANT_ARG, greedyString())
 				.executes(Commands::GiveVariant)
 			)
 		);

@@ -16,8 +16,12 @@ Initial Release
 - Added the command `/nokebab migrate`
 - Fixed some benign warnings when running on server-only environnement.
 ### 1.2.1
-- Updated for 1.20.5
+- Marked as incompatible with MC 1.20.5
 
 ## 1.3
-- Added the command `/nokebab give`
+### 1.3.0
+- Ported to MC 1.20.5.
+- Added the command `/nokebab give`.
 - Custom DataTrackers can be disabled in the config. Those are off by default on dedicated servers.
+### 1.3.1
+- Updated for MC 1.21.

@@ -10,7 +10,7 @@ import net.minecraft.world.World;
 public class RegistryUtil
 {
 	/**
-	 * Seeks the smallest painting existing painting, to serve as fallback.
+	 * Seeks the smallest existing painting, to serve as fallback.
 	 * Returns immediately upon finding a 1x1 painting.
 	 */
 	static public RegistryEntry<PaintingVariant> GetFallback(Registry<PaintingVariant> registry){

@@ -18,5 +18,5 @@ Current master
 #### No Workaround: 
 - The painting registry is no longer static, and must be passed into the parameters of the functions that need it.
 - The serialization function of paintings now use codecs. Requires new mixin injection.
-###	Possible Workaround: 
+### Possible Workaround: 
 - Invalid variant-locked painting no longer defaults to a specific variant.

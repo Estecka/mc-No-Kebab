@@ -35,7 +35,7 @@ import tk.estecka.nokebab.IPaintingEntityDuck;
 public abstract class PaintingEntityRendererMixin 
 extends EntityRenderer<PaintingEntity>
 {
-	static private final Identifier MISSINGNO_ID = new Identifier("nokebab", "missingno");
+	static private final Identifier MISSINGNO_ID = Identifier.of("nokebab", "missingno");
 
 
 	private PaintingEntityRendererMixin(){ super(null); }

@@ -13,3 +13,10 @@ Current master
 #### Possible Workaround
 - **Vanilla Clients now crash when receiving data from modded data trackers**. Use display entities instead ?
 - `PaintingEntity::VARIANT_NBT_KEY` was removed: Use literal instead.
+
+### 1.21.0
+#### No Workaround: 
+- The painting registry is no longer static, and must be passed into the parameters of the functions that need it.
+- The serialization function of paintings now use codecs. Requires new mixin injection.
+### Possible Workaround: 
+- Invalid variant-locked painting no longer defaults to a specific variant.

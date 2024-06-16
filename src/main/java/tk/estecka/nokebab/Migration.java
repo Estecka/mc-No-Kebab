@@ -6,6 +6,8 @@ import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
+import net.minecraft.entity.decoration.painting.PaintingVariant;
+import net.minecraft.registry.Registry;
 
 public abstract class Migration
 implements Function<PaintingEntity, PaintingState>
@@ -68,9 +70,9 @@ implements Function<PaintingEntity, PaintingState>
 		private final String source;
 		private final PaintingState destination;
 
-		public Literal(String source, String destination){
+		public Literal(String source, String destination, Registry<PaintingVariant> registry){
 			this.source = source;
-			this.destination = PaintingState.ForName(destination);
+			this.destination = PaintingState.ForName(destination, registry);
 		}
 
 		public boolean Matches(PaintingEntity painting){
@@ -88,10 +90,12 @@ implements Function<PaintingEntity, PaintingState>
 	{
 		private final Pattern source;
 		private final String destination;
+		private final Registry<PaintingVariant> registry;
 
-		public Regex(Pattern source, String destination){
+		public Regex(Pattern source, String destination, Registry<PaintingVariant> registry){
 			this.source = source;
 			this.destination = destination;
+			this.registry = registry;
 		}
 
 		@Override
@@ -101,7 +105,7 @@ implements Function<PaintingEntity, PaintingState>
 			if (!match.matches())
 				return null;
 			else
-				return PaintingState.ForName(match.replaceAll(this.destination));
+				return PaintingState.ForName(match.replaceAll(this.destination), registry);
 		}
 	}
 }

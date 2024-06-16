@@ -3,7 +3,7 @@ package tk.estecka.nokebab;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.entity.decoration.painting.PaintingVariant;
-import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 
@@ -23,32 +23,32 @@ import net.minecraft.util.Identifier;
  */
 public record PaintingState (@NotNull String missingName, @NotNull RegistryEntry<PaintingVariant> activeVariant)
 {
-	static public PaintingState ForName(String variantName){
-		return FromEntry(variantName, GetEntry(variantName));
+	static public PaintingState ForName(String variantName, Registry<PaintingVariant> registry){
+		return FromEntry(variantName, GetEntry(variantName, registry), registry);
 	}
-	static public PaintingState ForId(Identifier variantId){
-		return FromEntry(variantId.toString(), GetEntry(variantId));
+	static public PaintingState ForId(Identifier variantId, Registry<PaintingVariant> registry){
+		return FromEntry(variantId.toString(), GetEntry(variantId, registry), registry);
 	}
-	static private PaintingState FromEntry(String name, @Nullable RegistryEntry<PaintingVariant> entry){
+	static private PaintingState FromEntry(String name, @Nullable RegistryEntry<PaintingVariant> entry, Registry<PaintingVariant> registry){
 		if (entry != null)
 			return new PaintingState("", entry);
 		else
-			return new PaintingState(name, GetEntry(Registries.PAINTING_VARIANT.getDefaultId()));
+			return new PaintingState(name, registry.getDefaultEntry().orElseThrow());
 	}
 
-	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(String name){
+	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(String name, Registry<PaintingVariant> registry){
 		Identifier id = Identifier.tryParse(name);
 		if (id == null)
 			return null;
 		else
-			return GetEntry(id);
+			return GetEntry(id, registry);
 	}
-	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(Identifier id){
-		var variant = Registries.PAINTING_VARIANT.getOrEmpty(id);
+	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(Identifier id, Registry<PaintingVariant> registry){
+		var variant = registry.getOrEmpty(id);
 		if (variant.isEmpty())
 			return null;
 		else
-			return Registries.PAINTING_VARIANT.getEntry(variant.get());
+			return registry.getEntry(variant.get());
 	}
 
 	public boolean IsMissingno(){

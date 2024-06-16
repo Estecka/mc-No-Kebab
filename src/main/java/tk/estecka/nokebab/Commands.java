@@ -18,10 +18,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.entity.Entity;
-import net.minecraft.registry.Registries;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -35,6 +35,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.command.argument.EntityArgumentType.entities;
 import static net.minecraft.command.argument.EntityArgumentType.getEntities;
+import static tk.estecka.nokebab.RegistryUtil.*;
 
 public class Commands
 {
@@ -109,7 +110,7 @@ public class Commands
 	}
 
 	static private CompletableFuture<Suggestions> ValidPaintingSuggestion(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder){
-		for (Identifier id : Registries.PAINTING_VARIANT.getIds())
+		for (Identifier id : PaintingsOf(context.getSource().getWorld()).getIds())
 			SuggestWhenAppropriate(builder, id.toString());
 		return builder.buildFuture();
 	}
@@ -144,7 +145,8 @@ public class Commands
 		String src = getString(context, SRC_ARG);
 		String dst = getString(context, DST_ARG);
 
-		Migration.Result result = new Migration.Literal(src, dst).Run(context.getSource().getWorld().iterateEntities());
+		ServerWorld world = context.getSource().getWorld();
+		Migration.Result result = new Migration.Literal(src, dst, PaintingsOf(world)).Run(world.iterateEntities());
 		return SendFeedback(context, result, ServersideTranslatable(SUCCESS_MSG_LIT, result.success(), src, dst));
 	}
 
@@ -159,7 +161,8 @@ public class Commands
 			return -1;
 		}
 
-		Migration.Result result = new Migration.Regex(regex, substitution).Run(context.getSource().getWorld().iterateEntities());
+		ServerWorld world = context.getSource().getWorld();
+		Migration.Result result = new Migration.Regex(regex, substitution, PaintingsOf(world)).Run(world.iterateEntities());
 		return SendFeedback(context, result, ServersideTranslatable(SUCCESS_MSG, result.success()));
 	}
 

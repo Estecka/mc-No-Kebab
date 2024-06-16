@@ -7,7 +7,6 @@ import net.minecraft.entity.decoration.AbstractDecorationEntity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.entity.decoration.painting.PaintingVariant;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import tk.estecka.nokebab.IPaintingEntityDuck;
@@ -22,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import static tk.estecka.nokebab.RegistryUtil.*;
 
 @Unique
 @Mixin(PaintingEntity.class)
@@ -93,9 +93,9 @@ implements IPaintingEntityDuck
 			original.call(nbt, entry);
 		else {
 			nbt.putString(VARIANT_NBT_KEY, missingName);
-			if (!entry.matchesId(Registries.PAINTING_VARIANT.getDefaultId())){
+			if (!entry.matchesId(GetDefaultId())){
 				NoKebab.LOGGER.error("Painting is Missingno, but active variant is not the default one: {} {} ", this.getPos(), this.getUuid());
-				NoKebab.LOGGER.error("Known: \"{}\" Active: {}", missingName, entry.getKey());
+				NoKebab.LOGGER.error("Known: \"{}\" Active: {} Expected: {}", missingName, entry.getKey(), GetDefaultId());
 			}
 		}
 	}
@@ -108,7 +108,7 @@ implements IPaintingEntityDuck
 
 		Identifier nbtId = Identifier.tryParse(nbtString);
 		boolean valid = (nbtId != null);
-		boolean exists = valid && Registries.PAINTING_VARIANT.containsId(nbtId);
+		boolean exists = valid && PaintingsOf(this.getWorld()).containsId(nbtId);
 		if (!valid)
 			NoKebab.LOGGER.warn("Painting with malformed ID: \"{}\" {} {}", nbtString, this.getPos(), this.getUuid());
 		else if (!exists)

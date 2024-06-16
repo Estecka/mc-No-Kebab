@@ -8,18 +8,18 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 
 /**
- * Represents the in-memory state of a PaintingEntity based on its variant. This
- * state varies greatly depending on whether the painting is a Missingno or not.
+ * Represents  the in-memory state  of  a PaintingEntity  based on  its intended
+ * variant, and whether it's a missingno.
  * 
- * If the painting variant  is valid, missingName will be empty (not null!), and
+ * If the intended variant  is valid, missingName will be empty (not null!), and
  * activeVariant represents the intended variant. missingName can never be null,
  * because it is not a valid value for the DataTracker to hold.
  * 
- * If the painting variant  is missing, missingName will  represent the intended
+ * If the intended variant  is missing, missingName will  represent the intended
  * variant, and  activeVariant  will  serve as  the  placeholder  which will  be
- * visible to vanilla clients. The  placeholder variant  should be set to kebab;
- * nothing dire  will  happen if it's not, but it being  otherwise  can indicate
- * that something unexpected occured.
+ * visible to vanilla clients. By convention, the placeholder variant  should be
+ * set to {@link RegistryUtil#GetFallback}; nothing bad will happen if it's not,
+ * but it being otherwise can indicate that something unexpected occured.
  */
 public record PaintingState (@NotNull String missingName, @NotNull RegistryEntry<PaintingVariant> activeVariant)
 {
@@ -33,7 +33,7 @@ public record PaintingState (@NotNull String missingName, @NotNull RegistryEntry
 		if (entry != null)
 			return new PaintingState("", entry);
 		else
-			return new PaintingState(name, registry.getDefaultEntry().orElseThrow());
+			return new PaintingState(name, RegistryUtil.GetFallback(registry));
 	}
 
 	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(String name, Registry<PaintingVariant> registry){

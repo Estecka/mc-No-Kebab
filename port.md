@@ -20,3 +20,6 @@ Current master
 - The serialization function of paintings now use codecs. Requires new mixin injection.
 ### Possible Workaround: 
 - Invalid variant-locked painting no longer defaults to a specific variant.
+
+### 1.21.2
+- `EntityRenderer` now takes two type arguments.

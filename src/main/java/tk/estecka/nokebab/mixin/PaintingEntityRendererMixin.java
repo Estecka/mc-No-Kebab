@@ -15,6 +15,7 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.PaintingEntityRenderer;
+import net.minecraft.client.render.entity.state.PaintingEntityRenderState;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
@@ -33,7 +34,7 @@ import tk.estecka.nokebab.IPaintingEntityDuck;
 @Environment(EnvType.CLIENT)
 @Mixin(PaintingEntityRenderer.class)
 public abstract class PaintingEntityRendererMixin 
-extends EntityRenderer<PaintingEntity>
+extends EntityRenderer<PaintingEntity,PaintingEntityRenderState>
 {
 	static private final Identifier MISSINGNO_ID = Identifier.of("nokebab", "missingno");
 

@@ -44,7 +44,7 @@ public record PaintingState (@NotNull String missingName, @NotNull RegistryEntry
 			return GetEntry(id, registry);
 	}
 	static public @Nullable RegistryEntry<PaintingVariant> GetEntry(Identifier id, Registry<PaintingVariant> registry){
-		var variant = registry.getOrEmpty(id);
+		var variant = registry.getOptionalValue(id);
 		if (variant.isEmpty())
 			return null;
 		else

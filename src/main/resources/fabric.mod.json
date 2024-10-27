@@ -3,15 +3,16 @@
 	"id": "no-kebab",
 	"version": "${version}",
 	"name": "No Kebab",
-	"description": "Prevents unknown painting ids from being replaced with Kebab.",
+	"description": "Prevents uninstalled paintings from being removed from the world.",
 	"authors": [
 		"Estecka"
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/no-kebab",
-		"sources": "https://github.com/Estecka/mc-No-Kebab"
+		"sources": "https://github.com/Estecka/mc-No-Kebab",
+		"issues":  "https://github.com/Estecka/mc-No-Kebab/issues"
 	},
-	"license": "GNU AGPLv3",
+	"license": "EUPL",
 	"icon": "assets/nokebab/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -23,7 +24,7 @@
 		"no-kebab.mixins.json"
 	],
 	"depends": {
-		"minecraft": "~1.21",
+		"minecraft": ">=1.21 <1.21.2",
 		"fabricloader": ">=0.15.11",
 		"fabric-api": "*",
 		"java": ">=21"

@@ -21,7 +21,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import tk.estecka.nokebab.IPaintingEntityDuck;
+import tk.estecka.nokebab.duck.IPaintingEntityDuck;
 
 /**
  * Euler to quaternions: https://computergraphics.stackexchange.com/a/8229

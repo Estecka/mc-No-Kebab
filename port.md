@@ -22,4 +22,5 @@ Current master
 - Invalid variant-locked painting no longer defaults to a specific variant.
 
 ### 1.21.2
-- `EntityRenderer` now takes two type arguments.
+- `EntityRenderer` now renders a "RenderState" instead of an entity.
+

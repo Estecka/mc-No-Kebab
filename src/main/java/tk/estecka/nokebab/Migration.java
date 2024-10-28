@@ -8,6 +8,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.entity.decoration.painting.PaintingVariant;
 import net.minecraft.registry.Registry;
+import tk.estecka.nokebab.duck.IPaintingEntityDuck;
 
 public abstract class Migration
 implements Function<PaintingEntity, PaintingState>

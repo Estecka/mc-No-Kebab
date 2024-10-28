@@ -39,6 +39,6 @@ public class RegistryUtil
 	}
 
 	static public Registry<PaintingVariant> PaintingsOf(World world){
-		return world.getRegistryManager().get(RegistryKeys.PAINTING_VARIANT);
+		return world.getRegistryManager().getOrThrow(RegistryKeys.PAINTING_VARIANT);
 	}
 }

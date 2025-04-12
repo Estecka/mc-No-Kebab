@@ -12,11 +12,10 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
@@ -27,15 +26,12 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import tk.estecka.nokebab.duck.IPaintingEntityDuck;
-import static com.mojang.brigadier.arguments.BoolArgumentType.bool;
-import static com.mojang.brigadier.arguments.BoolArgumentType.getBool;
-import static com.mojang.brigadier.arguments.StringArgumentType.string;
-import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
-import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static net.minecraft.server.command.CommandManager.literal;
 import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.command.argument.EntityArgumentType.entities;
-import static net.minecraft.command.argument.EntityArgumentType.getEntities;
+import static com.mojang.brigadier.arguments.BoolArgumentType.*;
+import static com.mojang.brigadier.arguments.StringArgumentType.*;
+import static net.minecraft.command.argument.EntityArgumentType.*;
+import static net.minecraft.command.argument.IdentifierArgumentType.*;
 import static tk.estecka.nokebab.RegistryUtil.*;
 
 public class Commands
@@ -95,7 +91,7 @@ public class Commands
 		);
 
 		root.then(literal("give")
-			.then(argument(VARIANT_ARG, greedyString())
+			.then(argument(VARIANT_ARG, identifier())
 				.executes(Commands::GiveVariant)
 			)
 		);
@@ -172,14 +168,16 @@ public class Commands
 			return -1;
 		}
 
-		String rawVariant = getString(context, VARIANT_ARG);
-		NbtCompound entityData = new NbtCompound();
-		entityData.putString("id", "minecraft:painting");
-		entityData.putString("variant", rawVariant);
+		Identifier id = getIdentifier(context, VARIANT_ARG);
+		var entry = context.getSource().getWorld().getRegistryManager().getOrThrow(RegistryKeys.PAINTING_VARIANT).getEntry(id).orElse(null);
+		if (entry == null){
+			context.getSource().sendError(Text.literal("Invalid variant: "+id.toString()));
+			return -1;
+		}
 
 		ItemStack stack = new ItemStack(Items.PAINTING);
-		stack.set(DataComponentTypes.ENTITY_DATA, NbtComponent.of(entityData));
-	
+		stack.set(DataComponentTypes.PAINTING_VARIANT, entry);
+
 		return player.getInventory().insertStack(stack) ? 1 : 0;
 	}
 

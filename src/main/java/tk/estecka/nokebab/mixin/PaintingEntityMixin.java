@@ -1,5 +1,6 @@
 package tk.estecka.nokebab.mixin;
 
+import net.minecraft.entity.Variants;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -7,7 +8,6 @@ import net.minecraft.entity.decoration.AbstractDecorationEntity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.entity.decoration.painting.PaintingVariant;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
@@ -23,9 +23,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
 import static tk.estecka.nokebab.RegistryUtil.*;
 
 @Unique
@@ -34,7 +31,7 @@ public abstract class PaintingEntityMixin
 extends AbstractDecorationEntity
 implements IPaintingEntityDuck
 {
-	static private final String VARIANT_NBT_KEY = "variant";
+	static private final String VARIANT_NBT_KEY = Variants.VARIANT_NBT_KEY;
 	static private final TrackedData<String> MISSING_TRACKER;
 
 	static {
@@ -43,13 +40,13 @@ implements IPaintingEntityDuck
 		else
 			MISSING_TRACKER = null;
 	}
-	
+
 
 	private @NotNull String MISSING_VARIANT = "";
 
 	private PaintingEntityMixin(){ super(null, null); }
 	@Shadow public abstract RegistryEntry<PaintingVariant> getVariant();
-	@Shadow public abstract void setVariant(RegistryEntry<PaintingVariant> variant);
+	@Shadow private void setVariant(RegistryEntry<PaintingVariant> variant){ throw new AssertionError(); }
 
 
 /******************************************************************************/
@@ -103,12 +100,12 @@ implements IPaintingEntityDuck
 /* # Serialization                                                            */
 /******************************************************************************/
 
-	@WrapOperation( method="writeCustomDataToNbt", at=@At(value="INVOKE", target="com/mojang/serialization/Codec.encodeStart(Lcom/mojang/serialization/DynamicOps;Ljava/lang/Object;)Lcom/mojang/serialization/DataResult;") )
-	private DataResult<NbtElement>	WriteMissingVariantToNBT(Codec<RegistryEntry<PaintingVariant>> codec, DynamicOps<NbtElement> ops, Object entry, Operation<DataResult<NbtElement>> original) {
+	@WrapOperation( method="writeCustomDataToNbt", at=@At(value="INVOKE", target="net/minecraft/entity/Variants.writeVariantToNbt(Lnet/minecraft/nbt/NbtCompound;Lnet/minecraft/registry/entry/RegistryEntry;)V") )
+	private void	WriteMissingVariantToNBT(NbtCompound nbt, RegistryEntry<PaintingVariant> variant, Operation<Void> original) {
 		final PaintingState state = this.nokebab$GetState();
 
 		if (!state.IsMissingno())
-			return original.call(codec, ops, entry);
+			original.call(nbt, variant);
 		else {
 			final var defaultId = GetFallbackId(PaintingsOf(this.getWorld()));
 			if (!state.activeVariant().matchesId(defaultId)){
@@ -116,15 +113,13 @@ implements IPaintingEntityDuck
 				NoKebab.LOGGER.error("Known: \"{}\" Active: {} Expected: {}", state.missingName(), state.activeVariant().getKey(), defaultId);
 			}
 
-			NbtCompound nbt = new NbtCompound();
 			nbt.putString(VARIANT_NBT_KEY, state.missingName());
-			return DataResult.success(nbt);
 		}
 	}
 
 	@Inject( method="readCustomDataFromNbt", at=@At("TAIL") )
 	private void	preserveMissingVariantFromNBT(NbtCompound nbt, CallbackInfo info){
-		String variantName = nbt.getString(VARIANT_NBT_KEY);
+		String variantName = nbt.getString(VARIANT_NBT_KEY, "");
 		if (variantName.isEmpty())
 			return;
 

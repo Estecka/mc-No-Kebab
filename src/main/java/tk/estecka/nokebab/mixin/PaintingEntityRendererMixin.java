@@ -47,7 +47,7 @@ extends EntityRenderer<PaintingEntity,PaintingEntityRenderState>
 
 		if (!missingName.isEmpty()) {
 			final TextRenderer textRenderer = this.getTextRenderer();
-			Quaternionf entityRotation = RotationAxis.POSITIVE_Y.rotationDegrees(180 - state.facing.getHorizontal() * 90);
+			Quaternionf entityRotation = RotationAxis.POSITIVE_Y.rotationDegrees(180 - state.facing.getHorizontalQuarterTurns() * 90);
 			float x = -textRenderer.getWidth(missingName)/2;
 			float y = -state.variant.height();
 

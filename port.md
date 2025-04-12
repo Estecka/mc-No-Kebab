@@ -24,3 +24,7 @@ Current master
 ### 1.21.2
 - `EntityRenderer` now renders a "RenderState" instead of an entity.
 
+### 1.21.5
+- Painting Items now have a dedicated variant component.
+- NBT get methods now either wrap their return values in optionals, or require a fallback.
+- The processus of serializing Painting Entity variant changed, requiring new injection.
